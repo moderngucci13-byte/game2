@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='24' rx='6' fill='%230F172A' stroke='%2322D3EE' stroke-width='2'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%2322D3EE'/%3E%3C/svg%3E">
+<title>ZERO//TRUST: Korporativ xavfsizlik platformasi (simulyatsiya)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #060B17;
+    --panel: #0B1426;
+    --panel2: #0F1B33;
+    --line: rgba(120, 160, 220, .16);
+    --line-strong: rgba(120, 160, 220, .32);
+    --text: #E6EEFA;
+    --muted: #8A9BB8;
+    --cyan: #22D3EE;
+    --ok: #34D399;
+    --warn: #F5B94A;
+    --bad: #F26B6B;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --bg: #EEF3FA;
+      --panel: #FFFFFF;
+      --panel2: #F4F7FC;
+      --line: rgba(30, 60, 110, .14);
+      --line-strong: rgba(30, 60, 110, .28);
+      --text: #0E1A2E;
+      --muted: #56657F;
+      --cyan: #0B8FA8;
+      --ok: #118A5E;
+      --warn: #A86A00;
+      --bad: #C0392B;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+    background: linear-gradient(-45deg, #0F172A, #1E1B4B, #0E7490, #7C3AED, #DB2777, #0F766E);
+    background-size: 400% 400%;
+    animation: jonliFon 16s ease infinite;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @keyframes jonliFon {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body { animation: none; }
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.5), transparent 70%);
+    opacity: .35;
+  }
+
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  button, select, input { font: inherit; color: inherit; }
+
+  header.top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .top-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: .02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .brand i {
+    width: 22px; height: 22px;
+    border: 1px solid var(--cyan);
+    border-radius: 6px;
+    box-shadow: 0 0 18px rgba(34, 211, 238, .35);
+    position: relative;
+  }
+
+  .brand i::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    background: var(--cyan);
+    border-radius: 2px;
+  }
+
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  nav.tabs a {
+    color: var(--muted);
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: color .2s ease, background-color .2s ease;
+  }
+
+  nav.tabs a:hover { color: var(--text); background: var(--panel2); }
+
+  nav.tabs a[aria-current="page"] {
+    color: var(--text);
+    background: var(--panel2);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  .sim-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  main {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 6px; }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+  .lede { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+
+  .panel {
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .grid { display: grid; gap: 16px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .two { grid-template-columns: 1fr; }
+  @media (min-width: 900px) {
+    .two { grid-template-columns: 380px 1fr; align-items: start; }
+    .two.wide { grid-template-columns: 1fr 1fr; }
+  }
+
+  .kpi {
+    text-align: left;
+    cursor: pointer;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .kpi:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+
+  .kpi[aria-pressed="true"] {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 24px rgba(34, 211, 238, .12);
+  }
+
+  .kpi .val { font-family: var(--mono); font-size: 28px; font-weight: 500; margin: 6px 0; }
+  .kpi .sub { color: var(--muted); font-size: 13px; }
+
+  .sim-tag { font-family: var(--mono); font-size: 11px; color: var(--warn); font-weight: 400; }
+
+  .score-ring { display: flex; align-items: center; gap: 18px; }
+  .score-ring svg { width: 84px; height: 84px; flex: none; }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 170px 1fr 56px;
+    gap: 12px;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 14px;
+  }
+
+  .bar-track {
+    height: 10px;
+    background: var(--panel2);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  .bar-fill { height: 100%; border-radius: 999px; transition: width .6s ease; }
+  .bar-val { font-family: var(--mono); text-align: right; color: var(--muted); }
+
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+  .chip {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color .2s ease, border-color .2s ease;
+  }
+
+  .chip:hover { color: var(--text); }
+  .chip[aria-pressed="true"] { color: var(--text); border-color: var(--cyan); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .mono { font-family: var(--mono); font-size: 13px; }
+  .table-wrap { overflow-x: auto; }
+
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+
+  .tone-allow { color: var(--ok); }
+  .tone-warn { color: var(--warn); }
+  .tone-deny { color: var(--bad); }
+  .tone-mfa { color: var(--cyan); }
+
+  .pill { font-family: var(--mono); font-size: 12px; padding: 2px 8px; border-radius: 6px; }
+  .pass { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+  .fail { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+
+  .field { display: grid; gap: 6px; margin-bottom: 14px; }
+  .field label, .field .lbl { font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
+
+  select, input[type="number"], input[type="search"], input[type="text"] {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 11px;
+    width: 100%;
+  }
+
+  input[type="range"] { width: 100%; accent-color: var(--cyan); }
+
+  .btn {
+    background: var(--cyan);
+    color: #04121A;
+    border: 0;
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter .2s ease, transform .1s ease;
+  }
+
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line-strong); }
+
+  .outcome {
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid currentColor;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .outcome strong { font-size: 24px; font-weight: 700; }
+  .outcome .meta { color: var(--muted); font-size: 14px; }
+
+  ul.plain { margin: 6px 0 0; padding-left: 18px; }
+  ul.plain li { margin: 4px 0; }
+
+  .note {
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px dashed var(--line-strong);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .scen-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .scen { display: flex; flex-direction: column; gap: 10px; }
+  .scen h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .scen p { margin: 0; color: var(--muted); font-size: 14px; }
+  .scen .code { font-family: var(--mono); color: var(--cyan); font-size: 13px; }
+  .scen .btn { margin-top: auto; align-self: flex-start; }
+
+  .audit ol { margin: 0; padding: 0; }
+  .audit li {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+    list-style: none;
+  }
+
+  .empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--line-strong); border-radius: 12px; }
+
+  /* Savol-javob */
+  .faq-tools { display: grid; gap: 12px; margin-bottom: 14px; }
+  @media (min-width: 720px) { .faq-tools { grid-template-columns: 1fr auto; align-items: center; } }
+
+  details.qa {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 4px;
+  }
+
+  details.qa summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+  }
+
+  details.qa summary::-webkit-details-marker { display: none; }
+
+  details.qa summary::after {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--cyan);
+    font-size: 18px;
+    flex: none;
+    transition: transform .2s ease;
+  }
+
+  details.qa[open] summary::after { content: "−"; }
+  details.qa p { margin: 10px 0 0; color: var(--muted); max-width: 72ch; }
+
+  .cat { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-right: 8px; }
+
+  .quiz-q { margin: 0 0 10px; font-weight: 600; }
+  .quiz-opts { display: grid; gap: 8px; margin-bottom: 10px; }
+
+  .quiz-opts button {
+    text-align: left;
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color .2s ease;
+  }
+
+  .quiz-opts button:hover:not(:disabled) { border-color: var(--line-strong); }
+  .quiz-opts button:disabled { cursor: default; }
+  .quiz-opts button.right { border-color: var(--ok); color: var(--ok); }
+  .quiz-opts button.wrong { border-color: var(--bad); color: var(--bad); }
+  .feedback { font-size: 14px; color: var(--muted); min-height: 1.5em; margin: 0 0 12px; }
+  .score { font-family: var(--mono); font-size: 30px; margin: 8px 0; }
+
+  footer { max-width: 1280px; margin: 0 auto; padding: 0 20px 36px; color: var(--muted); font-size: 13px; }
+
+  .toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: var(--panel2);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .25s ease, transform .25s ease;
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  .toast.show { opacity: 1; transform: none; }
+
+  .view { animation: enter .35s ease both; }
+
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  @media (max-width: 640px) {
+    .sim-badge { margin-left: 0; }
+    .bar-row { grid-template-columns: 110px 1fr 46px; }
+  }
+  .login { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(4, 8, 18, .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 20px; }
+  .login.hide { display: none; }
+  .login .panel { width: 100%; max-width: 380px; }
+  .login input { width: 100%; margin: 12px 0 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--panel2); color: var(--text); font-size: 15px; }
+  #who-btn { cursor: pointer; margin-left: 8px; background: transparent; }
+  .mon-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 16px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#overview" data-route="overview" aria-label="ZERO//TRUST bosh sahifa"><i aria-hidden="true"></i>ZERO//TRUST</a>
+    <nav class="tabs" aria-label="Asosiy">
+      <a href="#overview" data-route="overview">Boshqaruv paneli</a>
+      <a href="#policy" data-route="policy">Siyosat simulyatori</a>
+      <a href="#scenarios" data-route="scenarios">Senariylar</a>
+      <a href="#qa" data-route="qa">Savol-javob</a>
+      <a href="#monitoring" data-route="monitoring">Monitoring</a>
+    </nav>
+    <span class="sim-badge">FAQAT SIMULYATSIYA</span>
+    <button class="sim-badge" id="who-btn" type="button" title="Boshqa talaba uchun almashtirish"></button>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<footer>
+  Barcha foydalanuvchilar, qurilmalar va qarorlar sintetik ma'lumotdir. Siyosat namunaviy ko'rgazma bo'lib, standartlashtirilgan xavf formulasi emas. Bu sahifa haqiqiy tarmoqni kuzatmaydi. Ishlab chiqarish muhitida server tomonidan avtorizatsiya, haqiqiy identifikatsiya tizimi, jurnallash va sinovlar talab qilinadi. Manba: NIST SP 800-207, Zero Trust Architecture.
+</footer>
+
+<div class="login" id="login" role="dialog" aria-modal="true" aria-labelledby="login-title">
+  <div class="panel">
+    <h2 id="login-title">Ismingizni kiriting</h2>
+    <p style="color:var(--muted);margin:0;font-size:14px">Testdagi va simulyatordagi harakatlaringiz shu ism bilan monitoringga yoziladi.</p>
+    <input type="text" id="login-name" maxlength="60" placeholder="Masalan: Aliyev Vali" autocomplete="off">
+    <button class="btn" type="button" id="login-btn">Boshlash</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  var R = rng(20261019);
+
+  function pick(opts) {
+    var x = R(), acc = 0;
+    for (var i = 0; i < opts.length; i++) {
+      acc += opts[i][1];
+      if (x < acc) return opts[i][0];
+    }
+    return opts[opts.length - 1][0];
+  }
+
+  var LABEL = {
+    ALLOW: "Ruxsat berildi",
+    RESTRICTED: "Cheklangan kirish",
+    STEP_UP: "Qo'shimcha tekshiruv",
+    REQUIRE_MFA: "MFA talab qilinadi",
+    DENY: "Rad etildi"
+  };
+
+  var TONE = { ALLOW: "tone-allow", RESTRICTED: "tone-warn", STEP_UP: "tone-mfa", REQUIRE_MFA: "tone-mfa", DENY: "tone-deny" };
+  var COLOR = { ALLOW: "var(--ok)", RESTRICTED: "var(--warn)", STEP_UP: "var(--cyan)", REQUIRE_MFA: "var(--cyan)", DENY: "var(--bad)" };
+  var ORDER = ["DENY", "REQUIRE_MFA", "STEP_UP", "RESTRICTED", "ALLOW"];
+
+  /* ---------- Siyosat dvigateli (deterministik, ko'rgazma uchun) ---------- */
+  var RULES = [
+    { id: "R1", name: "Seans joriy (12 soatgacha)", mandatory: true,
+      pass: function (r) { return r.session <= 12; }, fail: "DENY",
+      fix: "12 soatdan eski seanslar uchun qayta autentifikatsiya talab qiling." },
+    { id: "R2", name: "Qurilma xavfli deb belgilanmagan", mandatory: true,
+      pass: function (r) { return r.device !== "compromised"; }, fail: "DENY",
+      fix: "Qurilmani ajratib, yangi kirishdan oldin tuzating." },
+    { id: "R3", name: "Pudratchilar administrator so'rovi yubora olmaydi", mandatory: true,
+      pass: function (r) { return !(r.role === "contractor" && r.action === "admin"); }, fail: "DENY",
+      fix: "Pudratchilarga administrator huquqi o'rniga cheklangan, muddatli rol bering." },
+    { id: "R4", name: "Yuqori maxfiylik uchun boshqariladigan, muvofiq qurilma kerak", mandatory: true,
+      pass: function (r) { return r.sens !== "high" || r.device === "compliant"; }, fail: "DENY",
+      fix: "Qurilmani boshqaruvga qo'shing va muvofiqlik tekshiruvlarini tuzating." },
+    { id: "R5", name: "Faqat parol bilan kirish yuqori xavfli so'rovga ruxsat bermaydi", mandatory: false,
+      pass: function (r) { return !(r.identity === "password" && (r.sens === "high" || r.conn >= 70)); }, fail: "REQUIRE_MFA",
+      fix: "Ushbu foydalanuvchi uchun fishingga chidamli MFA yoqing." },
+    { id: "R6", name: "Ommaviy yoki xorijiy tarmoqdan yozish va administratsiya cheklanadi", mandatory: false,
+      pass: function (r) { return !((r.loc === "public" || r.loc === "foreign") && r.action !== "read"); }, fail: "RESTRICTED",
+      fix: "Tashqi tarmoq seanslarini faqat o'qishga cheklang yoki o'zgartirish uchun korporativ tarmoqni talab qiling." },
+    { id: "R7", name: "Boshqarilmagan qurilma faqat o'qiy oladi", mandatory: false,
+      pass: function (r) { return !(r.device === "unmanaged" && r.action !== "read"); }, fail: "RESTRICTED",
+      fix: "Yozish huquqini ochish uchun qurilmani ro'yxatga oling." },
+    { id: "R8", name: "Ulanish xavfi 70 dan past", mandatory: false,
+      pass: function (r) { return r.conn < 70; }, fail: "STEP_UP",
+      fix: "Kirish berishdan oldin qo'shimcha tasdiqlash so'rang." }
+  ];
+
+  var RISK_W = {
+    loc: { corporate: 0, home: 10, public: 25, foreign: 35 },
+    identity: { password: 25, mfa: 10, "phishing-resistant": 0 },
+    device: { compliant: 0, noncompliant: 25, unmanaged: 20, compromised: 60 },
+    sens: { low: 0, medium: 10, high: 20 }
+  };
+
+  var LOC_UZ = { corporate: "korporativ", home: "uy", public: "ommaviy Wi-Fi", foreign: "xorijiy" };
+  var ID_UZ = { password: "faqat parol", mfa: "MFA", "phishing-resistant": "fishingga chidamli" };
+  var DEV_UZ = { compliant: "boshqariladi, muvofiq", noncompliant: "boshqariladi, nomuvofiq", unmanaged: "boshqarilmaydi", compromised: "xavfli deb belgilangan" };
+  var SENS_UZ = { low: "past", medium: "o'rta", high: "yuqori" };
+  var ROLE_UZ = { employee: "xodim", contractor: "pudratchi", admin: "administrator" };
+  var ACT_UZ = { read: "o'qish", write: "yozish", admin: "administratsiya" };
+
+  function evaluate(r) {
+    var results = RULES.map(function (rule) {
+      return { id: rule.id, name: rule.name, mandatory: rule.mandatory, pass: rule.pass(r), fail: rule.fail, fix: rule.fix };
+    });
+
+    var outcome = "ALLOW";
+    var failing = results.filter(function (x) { return !x.pass; });
+    failing.forEach(function (f) {
+      if (ORDER.indexOf(f.fail) < ORDER.indexOf(outcome)) outcome = f.fail;
+    });
+
+    var parts = [
+      ["Joylashuv: " + LOC_UZ[r.loc], RISK_W.loc[r.loc]],
+      ["Kirish: " + ID_UZ[r.identity], RISK_W.identity[r.identity]],
+      ["Qurilma: " + DEV_UZ[r.device], RISK_W.device[r.device]],
+      ["Maxfiylik: " + SENS_UZ[r.sens], RISK_W.sens[r.sens]],
+      ["Ulanish xavfi " + r.conn + " × 0.3", Math.round(r.conn * 0.3)],
+      ["Seans 8 soatdan eski", r.session > 8 ? 10 : 0],
+      ["Harakat: " + ACT_UZ[r.action], r.action === "admin" ? 10 : r.action === "write" ? 5 : 0]
+    ];
+    var risk = Math.min(100, parts.reduce(function (a, p) { return a + p[1]; }, 0));
+
+    var deny = failing.filter(function (f) { return f.mandatory; });
+    var explanation;
+    if (failing.length === 0) {
+      explanation = "Barcha sakkizta qoida o'tdi, shuning uchun ushbu seansga kirish ruxsat etiladi. Xavf seans davomida kuzatiladi.";
+    } else if (deny.length) {
+      explanation = "Majburiy " + deny[0].id + " qoidasi bajarilmadi: " + deny[0].name.toLowerCase() + ". Xavf bahosi (" + risk + ") qanday bo'lishidan qat'i nazar, so'rov rad etiladi.";
+    } else {
+      explanation = failing.length + " ta qoida qo'llandi, lekin majburiy qoida bajarilmadi. Eng qat'iy natija: " + LABEL[outcome].toLowerCase() + ".";
+    }
+
+    return { results: results, outcome: outcome, risk: risk, parts: parts, explanation: explanation, failing: failing };
+  }
+
+  /* ---------- Umumiy sintetik ma'lumotlar ---------- */
+  var RESOURCES = ["Kadrlar yozuvlari", "Ish haqi bazasi", "Manba kodi ombori", "Moliya ERP", "Ichki viki", "Mijozlar bazasi"];
+
+  var EVENTS = [];
+  (function build() {
+    for (var i = 0; i < 240; i++) {
+      var r = {
+        user: "u-" + (100 + Math.floor(R() * 60)),
+        identity: pick([["password", .2], ["mfa", .5], ["phishing-resistant", .3]]),
+        device: pick([["compliant", .6], ["noncompliant", .15], ["unmanaged", .2], ["compromised", .05]]),
+        loc: pick([["corporate", .55], ["home", .25], ["public", .12], ["foreign", .08]]),
+        sens: pick([["low", .4], ["medium", .35], ["high", .25]]),
+        role: pick([["employee", .75], ["contractor", .15], ["admin", .1]]),
+        action: pick([["read", .6], ["write", .3], ["admin", .1]]),
+        session: Math.round(R() * 16),
+        conn: Math.round(R() * 100),
+        resource: RESOURCES[Math.floor(R() * RESOURCES.length)]
+      };
+      var ev = evaluate(r);
+      r.outcome = ev.outcome;
+      r.risk = ev.risk;
+      r.minutesAgo = i * 7;
+      EVENTS.push(r);
+    }
+  })();
+
+  var SCENARIOS = [
+    { key: "A", name: "Xodim, ichki ilova",
+      desc: "Fishingga chidamli kirish, korporativ tarmoqdagi boshqariladigan qurilmadan.",
+      s: { identity: "phishing-resistant", device: "compliant", loc: "corporate", sens: "low", role: "employee", action: "read", session: 2, conn: 10 } },
+    { key: "B", name: "To'g'ri identifikator, nomuvofiq qurilma",
+      desc: "MFA to'g'ri, lekin noutbukda yangilanishlar va disk shifrlash yo'q.",
+      s: { identity: "mfa", device: "noncompliant", loc: "corporate", sens: "high", role: "employee", action: "read", session: 3, conn: 10 } },
+    { key: "C", name: "Shubhali kirish",
+      desc: "Xorijiy tarmoqdan, faqat parol bilan, yuqori ulanish xavfi bilan kirish.",
+      s: { identity: "password", device: "compliant", loc: "foreign", sens: "medium", role: "employee", action: "read", session: 1, conn: 82 } },
+    { key: "D", name: "Zararlangan qurilma",
+      desc: "Endpoint aniqlash tizimi belgilagan qurilma fayl serveriga o'tishga urinadi.",
+      s: { identity: "mfa", device: "compromised", loc: "corporate", sens: "medium", role: "employee", action: "read", session: 1, conn: 30 } },
+    { key: "E", name: "Pudratchi administrator huquqini so'raydi",
+      desc: "Pudratchi ishlab chiqarish tizimiga administrator kirishini so'raydi.",
+      s: { identity: "mfa", device: "compliant", loc: "home", sens: "high", role: "contractor", action: "admin", session: 2, conn: 25 } },
+    { key: "F", name: "Maxfiy ma'lumotlar bazasiga g'ayriodatiy kirish",
+      desc: "Xodim ish haqi bazasini odatdan tashqari ulanish xavfi bilan o'qiydi.",
+      s: { identity: "mfa", device: "compliant", loc: "corporate", sens: "high", role: "employee", action: "read", session: 3, conn: 75 } },
+    { key: "G", name: "Muddati tugagan seans",
+      desc: "12 soatdan eski seans himoyalangan resursga kirishga urinadi.",
+      s: { identity: "mfa", device: "compliant", loc: "corporate", sens: "medium", role: "employee", action: "read", session: 14, conn: 10 } },
+    { key: "H", name: "Noto'g'ri sozlangan segmentatsiya qoidasi",
+      desc: "Keng qoida pudratchiga ma'lumotlar bazasini o'qishga ruxsat beradi. Siyosat buni ruxsat etadi, bu esa ogohlantiruvchi belgi.",
+      s: { identity: "mfa", device: "compliant", loc: "home", sens: "high", role: "contractor", action: "read", session: 2, conn: 20 },
+      warn: "Bu RUXSAT natijasi juda keng segmentatsiya qoidasidan dalolat beradi. Qoidani faqat kerakli jadvallar va rollar bilan toraytiring." }
+  ];
+
+  var FIELDS = {
+    identity: { label: "Kirish kuchi", opts: [["password", "Faqat parol"], ["mfa", "MFA (push yoki OTP)"], ["phishing-resistant", "Fishingga chidamli (FIDO2)"]] },
+    device: { label: "Qurilma holati", opts: [["compliant", "Boshqariladi, muvofiq"], ["noncompliant", "Boshqariladi, nomuvofiq"], ["unmanaged", "Boshqarilmaydi"], ["compromised", "Xavfli deb belgilangan"]] },
+    loc: { label: "Tarmoq joylashuvi", opts: [["corporate", "Korporativ"], ["home", "Uy"], ["public", "Ommaviy Wi-Fi"], ["foreign", "Xorijiy davlat"]] },
+    sens: { label: "Resurs maxfiyligi", opts: [["low", "Past"], ["medium", "O'rta"], ["high", "Yuqori"]] },
+    role: { label: "Foydalanuvchi roli", opts: [["employee", "Xodim"], ["contractor", "Pudratchi"], ["admin", "Administrator"]] },
+    action: { label: "So'ralgan harakat", opts: [["read", "O'qish"], ["write", "Yozish"], ["admin", "Administratsiya"]] }
+  };
+
+  /* ---------- Savol-javob ma'lumotlari ---------- */
+  var FAQ = [
+    { cat: "Asoslar", q: "Zero Trust nima?",
+      a: "Zero Trust, \"hech kimga ishonmang, har doim tekshiring\" tamoyiliga asoslangan xavfsizlik strategiyasi va arxitekturasidir. U tarmoq ichida yoki tashqarisida bo'lishidan qat'i nazar, har bir so'rovni alohida tekshiradi. Bu bitta mahsulot yoki protokol emas." },
+    { cat: "Asoslar", q: "Nega an'anaviy perimetr xavfsizligi yetarli emas?",
+      a: "Eski modelda ichki tarmoq ishonchli hisoblanardi. Ammo xodimlar uzoqdan ishlaydi, ilovalar bulutga ko'chdi va hujumchilar ko'pincha kirish huquqini egallab, ichkarida harakatlanadi. Shu sababli chegaradan keyin ham tekshiruv kerak." },
+    { cat: "Asoslar", q: "\"Assume breach\" (buzilish yuz berdi deb faraz qilish) nimani anglatadi?",
+      a: "Tizim hujum allaqachon sodir bo'lgan deb faraz qilib loyihalanadi. Shuning uchun ruxsatlar cheklanadi, tarmoq segmentlarga bo'linadi va barcha harakatlar kuzatiladi. Maqsad buzilishni kamaytirish va uning tarqalishini to'xtatishdir." },
+    { cat: "Asoslar", q: "Identifikatsiya va avtorizatsiya o'rtasidagi farq nima?",
+      a: "Identifikatsiya kim ekanligingizni tasdiqlaydi, masalan, parol yoki MFA orqali. Avtorizatsiya esa sizga aynan qaysi resursga va qanday harakatga ruxsat berilganini belgilaydi. Foydalanuvchi tasdiqlangan bo'lishi mumkin, lekin baribir rad etilishi mumkin." },
+    { cat: "Texnologiya", q: "VPN va ZTNA o'rtasidagi farq nima?",
+      a: "VPN odatda foydalanuvchini butun tarmoqqa ulaydi. ZTNA esa faqat ruxsat etilgan ilovalarga, har bir so'rov uchun alohida ulanish beradi. ZTNA ilovalarni tarmoqqa ochiq qilmaydi, shuning uchun tarmoq bo'ylab harakatlanish imkoniyati kamayadi." },
+    { cat: "Texnologiya", q: "PEP, PDP va PA nima?",
+      a: "NIST SP 800-207 bo'yicha siyosat qarorini PDP (Policy Decision Point) chiqaradi, uni PEP (Policy Enforcement Point) bajaradi, PA (Policy Administrator) esa PEP uchun ulanish kalitlari va sozlamalarini boshqaradi. Ushbu bo'linish qaror qabul qilish va uni amalga oshirishni ajratib turadi." },
+    { cat: "Texnologiya", q: "Mikrosegmentatsiya nima uchun kerak?",
+      a: "Mikrosegmentatsiya tarmoqni kichik zonalarga bo'lib, zonalar orasidagi trafikni cheklaydi. Agar bitta tizim buzilsa, hujumchi uni boshqa tizimlarga osongina o'tkaza olmaydi. Bu lateral harakatni sezilarli darajada qiyinlashtiradi." },
+    { cat: "Texnologiya", q: "MFA va fishingga chidamli autentifikatsiya o'rtasida qanday farq bor?",
+      a: "Oddiy MFA, masalan, SMS yoki push tasdiqlash, ba'zi hujumlar bilan aldanishi mumkin. Fishingga chidamli usullar, masalan, FIDO2 kalitlari, kriptografik tasdiqlashga asoslanadi va soxta saytga kiritilgan ma'lumotni ishlatib bo'lmaydi." },
+    { cat: "Amaliyot", q: "Qurilma muvofiqligi nimani anglatadi?",
+      a: "Qurilma muvofiqligi qurilmaning xavfsizlik talablariga javob berishini bildiradi: yangilanishlar o'rnatilgan, disk shifrlangan, himoya dasturi faol va qurilma boshqaruvga qo'shilgan bo'lishi kerak. Muvofiq bo'lmagan qurilma ma'lumotlarga kirishi cheklanadi." },
+    { cat: "Amaliyot", q: "Zero Trust joriy etish uchun qayerdan boshlash kerak?",
+      a: "Eng qimmatli ma'lumotlar va ilovalarni aniqlashdan boshlang. Keyin identifikatsiya va qurilmalar ko'rinishini yaratib, kuchli autentifikatsiya va eng kam huquq tamoyilini joriy eting. Segmentatsiya va monitoring keyingi bosqichlarda qo'shiladi." },
+    { cat: "Amaliyot", q: "Zero Trust bitta kechada joriy etilishi mumkinmi?",
+      a: "Yo'q. Bu uzoq muddatli jarayon bo'lib, odatda bir necha bosqichda amalga oshiriladi. Har bir organizatsiya o'z ustuvorliklari, infratuzilmasi va xavf darajasiga qarab o'z ketma-ketligini tanlaydi." },
+    { cat: "Amaliyot", q: "Keng tarqalgan xatolar qanday?",
+      a: "Eng ko'p uchraydigan xatolar: Zero Trust ni faqat bitta mahsulot sifatida sotib olish, kuchli autentifikatsiyasiz ruxsat berish, ilovalarga juda keng huquq berish va monitoringni e'tibordan chetda qoldirish. Shuningdek, eski VPN ruxsatlarini o'chirmasdan qoldirish ham xavfli." },
+    { cat: "Cheklovlar", q: "Zero Trust qiyinchiliklarsiz bo'ladimi?",
+      a: "Yo'q. Qiyinchiliklar orasida eski ilovalar bilan mos kelmaslik, murakkab siyosatlarni boshqarish, foydalanuvchilarga qo'shimcha tekshiruvlar tufayli noqulaylik va malakali kadrlar yetishmasligi bor. Shu sababli bosqichma-bosqich joriy etish tavsiya etiladi." },
+    { cat: "Cheklovlar", q: "Bu sayt haqiqiy tarmoqni himoya qiladimi?",
+      a: "Yo'q. Bu sayt ta'lim maqsadida yaratilgan simulyatsiya. U haqiqiy tarmoqni kuzatmaydi va hech qanday haqiqiy kirish huquqini o'zgartirmaydi. Barcha ma'lumotlar sintetik." }
+  ];
+
+  var QUIZ = [
+    { q: "Zero Trust tamoyili qaysi?",
+      opts: ["Ichki tarmoqqa ishonish", "Hech kimga ishonmaslik, har doim tekshirish", "Faqat VPN orqali kirish", "Bir marta kirgandan keyin cheksiz huquq"], ans: 1,
+      why: "Zero Trust ichki yoki tashqi tarmoqdan qat'i nazar, har bir so'rovni tekshirishga asoslanadi." },
+    { q: "Majburiy qoida bajarilmasa, nima bo'ladi?",
+      opts: ["Xavf bahosi past bo'lsa, ruxsat beriladi", "Xavf bahosi qanday bo'lishidan qat'i nazar, rad etiladi", "Faqat ogohlantirish yuboriladi", "Foydalanuvchi avtomatik MFA ga o'tadi"], ans: 1,
+      why: "Majburiy qoidalar xavf bahosidan ustun turadi. Bu siyosat dvigatelining muhim qismi." },
+    { q: "Eng kam huquq tamoyili nimani anglatadi?",
+      opts: ["Barcha xodimlarga bir xil huquq berish", "Faqat vazifa uchun zarur bo'lgan huquqni berish", "Administratorlarga cheksiz huquq berish", "Huquqlarni hech qachon o'zgartirmaslik"], ans: 1,
+      why: "Foydalanuvchi faqat o'z vazifasi uchun kerakli resurslarga kira oladi." },
+    { q: "ZTNA nimani ta'minlaydi?",
+      opts: ["Butun tarmoqqa ochiq kirish", "Faqat ruxsat etilgan ilovalarga har bir so'rov uchun kirish", "Parolsiz tizimga kirish", "Tarmoqni umuman o'chirish"], ans: 1,
+      why: "ZTNA ilovalarni tarmoqqa ochiq qilmaydi, faqat ruxsat etilgan ilovalarga kirish beradi." },
+    { q: "Qaysi usul fishingga eng chidamli hisoblanadi?",
+      opts: ["SMS kodi", "Faqat parol", "FIDO2 kalitlari", "Xavfsizlik savollari"], ans: 2,
+      why: "FIDO2 kriptografik tasdiqlashga asoslanadi va soxta saytda ishlamaydi." }
+  ];
+
+  var state = Object.assign({}, SCENARIOS[0].s);
+  var activeScenario = "A";
+  var audit = [];
+  var ovFilter = "ALL";
+  var faqQuery = "";
+  var faqCat = "Barchasi";
+  var quizIndex = 0, quizScore = 0, quizDone = false;
+
+  /* ---------- UI yordamchilari ---------- */
+  function badge(outcome) {
+    return '<span class="badge ' + TONE[outcome] + '">' + esc(LABEL[outcome]) + '</span>';
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+
+  function setActiveTab(route) {
+    var links = document.querySelectorAll("nav.tabs a");
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute("data-route") === route) links[i].setAttribute("aria-current", "page");
+      else links[i].removeAttribute("aria-current");
+    }
+  }
+
+  /* ---------- Boshqaruv paneli ---------- */
+  function renderOverview() {
+    var total = EVENTS.length;
+    var c = { ALLOW: 0, RESTRICTED: 0, STEP_UP: 0, REQUIRE_MFA: 0, DENY: 0 };
+    var compliant = 0, mfa = 0;
+    EVENTS.forEach(function (e) {
+      c[e.outcome]++;
+      if (e.device === "compliant") compliant++;
+      if (e.identity !== "password") mfa++;
+    });
+    var stepped = c.STEP_UP + c.REQUIRE_MFA;
+    var compPct = Math.round(compliant / total * 100);
+    var mfaPct = Math.round(mfa / total * 100);
+    var notDenied = (total - c.DENY) / total;
+    var posture = Math.round(100 * (0.4 * (compliant / total) + 0.3 * (mfa / total) + 0.3 * notDenied));
+    var avgRisk = Math.round(EVENTS.reduce(function (a, e) { return a + e.risk; }, 0) / total);
+
+    var filtered = EVENTS.filter(function (e) {
+      if (ovFilter === "ALL") return true;
+      if (ovFilter === "STEP") return e.outcome === "STEP_UP" || e.outcome === "REQUIRE_MFA";
+      return e.outcome === ovFilter;
+    }).slice(0, 12);
+
+    var kpi = function (key, label, val, sub) {
+      return '<button class="kpi" type="button" data-kpi="' + key + '" aria-pressed="' + (ovFilter === key) + '">' +
+        '<span class="sub">' + esc(label) + '</span>' +
+        '<span class="val">' + esc(val) + '</span>' +
+        '<span class="sub">' + esc(sub) + '</span></button>';
+    };
+
+    var bars = [["ALLOW", c.ALLOW], ["STEP_UP", c.STEP_UP], ["REQUIRE_MFA", c.REQUIRE_MFA], ["RESTRICTED", c.RESTRICTED], ["DENY", c.DENY]]
+      .map(function (b) {
+        var pct = Math.round(b[1] / total * 100);
+        return '<div class="bar-row"><span>' + esc(LABEL[b[0]]) + '</span>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + COLOR[b[0]] + '"></div></div>' +
+          '<span class="bar-val">' + pct + '%</span></div>';
+      }).join("");
+
+    var rows = filtered.map(function (e) {
+      var t = new Date(Date.UTC(2026, 9, 19, 9, 0) - e.minutesAgo * 60000);
+      var hh = String(t.getUTCHours()).padStart(2, "0"), mm = String(t.getUTCMinutes()).padStart(2, "0");
+      return '<tr><td class="mono">' + hh + ':' + mm + '</td><td class="mono">' + esc(e.user) + '</td>' +
+        '<td>' + esc(e.resource) + '</td><td>' + esc(ACT_UZ[e.action]) + '</td>' +
+        '<td>' + badge(e.outcome) + '</td><td class="mono">' + e.risk + '</td></tr>';
+    }).join("");
+
+    var ringOffset = 176 - (176 * posture / 100);
+    var chipNames = { ALL: "Barchasi", ALLOW: LABEL.ALLOW, STEP: "Qo'shimcha tekshiruv yoki MFA", RESTRICTED: LABEL.RESTRICTED, DENY: LABEL.DENY };
+
+    document.getElementById("app").innerHTML =
+      '<section class="view">' +
+      '<h1>Boshqaruv paneli</h1>' +
+      '<p class="lede">Bir xil siyosat dvigateli bilan baholangan 240 ta sintetik kirish so\'rovi. Qaror KPI kartasini bossangiz, hodisalar ro\'yxati filtrlanadi.</p>' +
+
+      '<div class="grid kpis" style="margin-bottom:16px">' +
+        kpi("ALL", "Simulyatsiya so'rovlari", total, "So'nggi 24 soat (demo)") +
+        kpi("ALLOW", "Ruxsat berilgan", c.ALLOW, Math.round(c.ALLOW / total * 100) + "% so'rovlar") +
+        kpi("STEP", "Tekshiruv yoki MFA", stepped, Math.round(stepped / total * 100) + "% so'rovlar") +
+        kpi("RESTRICTED", "Cheklangan", c.RESTRICTED, Math.round(c.RESTRICTED / total * 100) + "% so'rovlar") +
+        kpi("DENY", "Rad etilgan", c.DENY, Math.round(c.DENY / total * 100) + "% so'rovlar") +
+      '</div>' +
+
+      '<div class="grid two wide" style="margin-bottom:16px">' +
+        '<div class="panel"><h2>Xavfsizlik holati bahosi <span class="sim-tag">SIMULYATSIYA</span></h2>' +
+          '<div class="score-ring">' +
+            '<svg viewBox="0 0 64 64" aria-hidden="true">' +
+              '<circle cx="32" cy="32" r="28" fill="none" stroke="var(--line-strong)" stroke-width="5"></circle>' +
+              '<circle cx="32" cy="32" r="28" fill="none" stroke="var(--cyan)" stroke-width="5" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="' + ringOffset + '" transform="rotate(-90 32 32)"></circle>' +
+            '</svg>' +
+            '<div><div class="mono" style="font-size:30px">' + posture + '<span style="color:var(--muted);font-size:16px"> / 100</span></div>' +
+            '<div style="color:var(--muted);font-size:13px">40% qurilma muvofiqligi, 30% MFA qamrovi, 30% rad etilmagan so\'rovlar. Demo og\'irliklari.</div>' +
+            '<div style="margin-top:8px;font-size:13px;color:var(--muted)">Qurilma muvofiqligi ' + compPct + '% · MFA qamrovi ' + mfaPct + '% · O\'rtacha xavf ' + avgRisk + '</div></div>' +
+          '</div></div>' +
+        '<div class="panel"><h2>Qarorlar taqsimoti <span class="sim-tag">SIMULYATSIYA</span></h2>' + bars + '</div>' +
+      '</div>' +
+
+      '<div class="panel">' +
+        '<h2>So\'nggi kirish qarorlari</h2>' +
+        '<div class="chips" role="group" aria-label="Qaror bo\'yicha filtr">' +
+          ["ALL", "ALLOW", "STEP", "RESTRICTED", "DENY"].map(function (k) {
+            return '<button class="chip" type="button" data-filter="' + k + '" aria-pressed="' + (ovFilter === k) + '">' + esc(chipNames[k]) + '</button>';
+          }).join("") +
+        '</div>' +
+        (filtered.length
+          ? '<div class="table-wrap"><table><thead><tr><th>Vaqt (UTC)</th><th>Foydalanuvchi</th><th>Resurs</th><th>Harakat</th><th>Qaror</th><th>Xavf</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+            '<p style="color:var(--muted);font-size:13px;margin:12px 0 0">' + filtered.length + ' ta mos hodisa ko\'rsatildi. Vaqtlar simulyatsiya qilingan.</p>'
+          : '<div class="empty">Bu filtrga mos hodisa topilmadi.</div>') +
+      '</div>' +
+      '</section>';
+  }
+
+  /* ---------- Siyosat simulyatori ---------- */
+  function fieldHtml(key) {
+    var f = FIELDS[key];
+    return '<div class="field"><label for="f-' + key + '">' + esc(f.label) + '</label>' +
+      '<select id="f-' + key + '" data-field="' + key + '">' +
+      f.opts.map(function (o) {
+        return '<option value="' + o[0] + '"' + (state[key] === o[0] ? " selected" : "") + '>' + esc(o[1]) + '</option>';
+      }).join("") + '</select></div>';
+  }
+
+  function renderPolicyShell() {
+    document.getElementById("app").innerHTML =
+      '<section class="view">' +
+      '<h1>Siyosat simulyatori</h1>' +
+      '<p class="lede">Istalgan shartni o\'zgartiring, qaror darhol yangilanadi. Qoidalar tartib bo\'yicha bajariladi. Majburiy qoida bajarilmasa, xavf bahosi qanchalik past bo\'lishidan qat\'i nazar, kirish rad etiladi. Xavf bahosi standart formula emas, demo hisoblashdir.</p>' +
+      '<div class="grid two">' +
+        '<div class="panel">' +
+          '<h2>So\'rov konteksti</h2>' +
+          fieldHtml("identity") + fieldHtml("device") + fieldHtml("loc") +
+          fieldHtml("sens") + fieldHtml("role") + fieldHtml("action") +
+          '<div class="field"><label for="f-session">Seans yoshi (soat)</label>' +
+            '<input type="number" id="f-session" data-field="session" min="0" max="48" value="' + state.session + '"></div>' +
+          '<div class="field"><label for="f-conn"><span>Ulanish xavfi</span><span class="mono" id="conn-val">' + state.conn + '</span></label>' +
+            '<input type="range" id="f-conn" data-field="conn" min="0" max="100" value="' + state.conn + '"></div>' +
+          '<button class="btn" type="button" id="log-btn">Qarorni audit jurnaliga yozish</button>' +
+        '</div>' +
+        '<div id="results"></div>' +
+      '</div>' +
+      '<div class="panel" style="margin-top:16px"><h2>Audit jurnali <span class="sim-tag">SIMULYATSIYA, FAQAT SHU SESSIYA UCHUN</span></h2><div id="audit"></div></div>' +
+      '</section>';
+    updatePolicyResults();
+    renderAudit();
+  }
+
+  function updatePolicyResults() {
+    var box = document.getElementById("results");
+    if (!box) return;
+    var ev = evaluate(state);
+    var scen = SCENARIOS.filter(function (s) { return s.key === activeScenario; })[0];
+
+    var parts = ev.parts.map(function (p) {
+      return '<tr><td>' + esc(p[0]) + '</td><td class="mono" style="text-align:right">' + p[1] + '</td></tr>';
+    }).join("");
+
+    var rules = ev.results.map(function (r) {
+      return '<tr><td class="mono">' + r.id + '</td><td>' + esc(r.name) +
+        (r.mandatory ? ' <span style="color:var(--muted);font-size:12px">(majburiy)</span>' : '') +
+        '</td><td><span class="pill ' + (r.pass ? "pass" : "fail") + '">' + (r.pass ? "O'tdi" : "Yiqildi") + '</span></td></tr>';
+    }).join("");
+
+    var fixes = ev.failing.length
+      ? '<ul class="plain">' + ev.failing.map(function (f) { return '<li>' + esc(f.fix) + '</li>'; }).join("") + '</ul>'
+      : '<p style="margin:6px 0 0;color:var(--muted)">Bu so\'rov uchun tuzatish talab qilinmaydi.</p>';
+
+    box.innerHTML =
+      (scen ? '<p class="note">' + esc(scen.key) + " senariysi: " + esc(scen.name) + ". " + esc(scen.desc) + (scen.warn ? ' ' + esc(scen.warn) : '') + '</p>' : '') +
+      '<div class="outcome" style="color:' + COLOR[ev.outcome] + '" role="status">' +
+        '<div><div class="meta">Yakuniy qaror</div><strong>' + esc(LABEL[ev.outcome]) + '</strong></div>' +
+        '<div class="meta" style="text-align:right">Xavf bahosi<br><span class="mono" style="font-size:22px;color:var(--text)">' + ev.risk + ' / 100</span></div>' +
+      '</div>' +
+      '<div class="panel" style="margin-bottom:16px"><h2>Izoh</h2><p style="margin:0">' + esc(ev.explanation) + '</p></div>' +
+      '<div class="panel" style="margin-bottom:16px"><h2>Qoidalar tartib bo\'yicha</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Qoida</th><th>Natija</th></tr></thead><tbody>' + rules + '</tbody></table></div></div>' +
+      '<div class="grid two wide">' +
+        '<div class="panel"><h2>Xavf hisobi <span class="sim-tag">DEMO OG\'IRLIKLARI</span></h2><div class="table-wrap"><table><tbody>' + parts +
+          '<tr><td><strong>Jami (100 bilan cheklangan)</strong></td><td class="mono" style="text-align:right"><strong>' + ev.risk + '</strong></td></tr>' +
+        '</tbody></table></div><p style="margin:10px 0 0;color:var(--muted);font-size:13px">Xavf bahosi bajarilmagan majburiy qoidani bekor qilmaydi.</p></div>' +
+        '<div class="panel"><h2>Tavsiya etilgan tuzatishlar</h2>' + fixes + '</div>' +
+      '</div>';
+  }
+
+  function renderAudit() {
+    var box = document.getElementById("audit");
+    if (!box) return;
+    if (!audit.length) {
+      box.innerHTML = '<div class="empty">Hali qaror yozilmagan. Yozish uchun "Qarorni audit jurnaliga yozish" tugmasini bosing.</div>';
+      return;
+    }
+    box.innerHTML = '<ol>' + audit.slice().reverse().map(function (a) {
+      return '<li>[' + esc(a.time) + '] ' + esc(a.summary) + ' → ' + esc(LABEL[a.outcome]) + ' (xavf ' + a.risk + ')</li>';
+    }).join("") + '</ol>';
+  }
+
+  /* ---------- Senariylar ---------- */
+  function renderScenarios() {
+    var cards = SCENARIOS.map(function (s) {
+      var ev = evaluate(Object.assign({ user: "", resource: "" }, s.s));
+      var order = ev.failing.slice().sort(function (a, b) { return ORDER.indexOf(a.fail) - ORDER.indexOf(b.fail); });
+      var driver = order.length ? "sabab: " + order[0].id : "barcha qoidalar o'tdi";
+      return '<article class="panel scen">' +
+        '<span class="code">Senariy ' + s.key + '</span>' +
+        '<h3>' + esc(s.name) + '</h3>' +
+        '<p>' + esc(s.desc) + '</p>' +
+        '<div>' + badge(ev.outcome) + ' <span class="mono" style="color:var(--muted);font-size:12px;margin-left:6px">' + driver + '</span></div>' +
+        '<button class="btn ghost" type="button" data-load="' + s.key + '">Simulyatorga yuklash</button>' +
+      '</article>';
+    }).join("");
+
+    document.getElementById("app").innerHTML =
+      '<section class="view">' +
+      '<h1>Senariylar</h1>' +
+      '<p class="lede">Sakkizta sintetik senariy. Birini simulyatorga yuklab, har bir qoida, xavf hisobi va tuzatishni ko\'ring. Kutilgan natijalar bir xil mexanizm orqali jonli hisoblanadi.</p>' +
+      '<div class="scen-grid">' + cards + '</div>' +
+      '</section>';
+  }
+
+  /* ---------- Savol-javob ---------- */
+  function renderQA() {
+    var cats = ["Barchasi"];
+    FAQ.forEach(function (f) { if (cats.indexOf(f.cat) < 0) cats.push(f.cat); });
+
+    var q = faqQuery.trim().toLowerCase();
+    var list = FAQ.filter(function (f) {
+      var catOk = faqCat === "Barchasi" || f.cat === faqCat;
+      var textOk = !q || (f.q + " " + f.a).toLowerCase().indexOf(q) >= 0;
+      return catOk && textOk;
+    });
+
+    var items = list.map(function (f, i) {
+      return '<details class="qa"' + (q && i < 1 ? " open" : "") + '>' +
+        '<summary><span><span class="cat">' + esc(f.cat) + '</span>' + esc(f.q) + '</span></summary>' +
+        '<p>' + esc(f.a) + '</p></details>';
+    }).join("");
+
+    var quizHtml;
+    if (quizDone) {
+      quizHtml = '<div class="score">' + quizScore + ' / ' + QUIZ.length + '</div>' +
+        '<p style="color:var(--muted);margin:0 0 14px">' + (quizScore === QUIZ.length ? "Ajoyib, barcha savollarga to'g'ri javob berdingiz." : "Mavzuni yana bir bor ko'rib chiqing va testni qayta boshlang.") + '</p>' +
+        '<button class="btn" type="button" id="quiz-restart">Testni qayta boshlash</button>';
+    } else {
+      var Q = QUIZ[quizIndex];
+      quizHtml = '<div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:8px">Savol ' + (quizIndex + 1) + ' / ' + QUIZ.length + '</div>' +
+        '<p class="quiz-q">' + esc(Q.q) + '</p>' +
+        '<div class="quiz-opts">' + Q.opts.map(function (o, i) {
+          return '<button type="button" data-opt="' + i + '">' + esc(o) + '</button>';
+        }).join("") + '</div>' +
+        '<p class="feedback" id="quiz-fb" aria-live="polite"></p>' +
+        '<button class="btn ghost" type="button" id="quiz-next" disabled>Keyingi savol</button>';
+    }
+
+    document.getElementById("app").innerHTML =
+      '<section class="view">' +
+      '<h1>Savol-javob</h1>' +
+      '<p class="lede">Zero Trust bo\'yicha tez-tez so\'raladigan savollar. Qidiring yoki mavzu bo\'yicha filtrlang. Pastdagi test bilimingizni tekshiradi.</p>' +
+      '<div class="grid two wide">' +
+        '<div class="panel">' +
+          '<div class="faq-tools">' +
+            '<input type="search" id="faq-search" placeholder="Savol yoki kalit so\'z qidiring..." aria-label="Savollarni qidirish" value="' + esc(faqQuery) + '">' +
+          '</div>' +
+          '<div class="chips" role="group" aria-label="Mavzu bo\'yicha filtr">' +
+            cats.map(function (c) {
+              return '<button class="chip" type="button" data-cat="' + esc(c) + '" aria-pressed="' + (faqCat === c) + '">' + esc(c) + '</button>';
+            }).join("") +
+          '</div>' +
+          (list.length ? items : '<div class="empty">Savol topilmadi. Boshqa kalit so\'z bilan qidirib ko\'ring.</div>') +
+          '<p style="color:var(--muted);font-size:13px;margin:12px 0 0">' + list.length + ' ta savol ko\'rsatildi.</p>' +
+        '</div>' +
+        '<div class="panel">' +
+          '<h2>Bilimni tekshirish testi</h2>' +
+          quizHtml +
+        '</div>' +
+      '</div>' +
+      '</section>';
+
+    if (q) {
+      var search = document.getElementById("faq-search");
+      if (search) { search.focus(); search.setSelectionRange(search.value.length, search.value.length); }
+    }
+  }
+
+  /* ---------- Talaba va monitoring ---------- */
+  var student = "";
+  var records = [];
+  var currentRoute = "overview";
+  var TYPE_UZ = { kirish: "Kirish", chiqish: "Chiqish", sahifa: "Bo'lim", test: "Test javobi", test_yakun: "Test natijasi", qaror: "Qaror" };
+  try { records = JSON.parse(localStorage.getItem("zt_records") || "[]"); } catch (err) { records = []; }
+  try { student = localStorage.getItem("zt_student") || ""; } catch (err) { student = ""; }
+
+  function saveRecords() {
+    try { localStorage.setItem("zt_records", JSON.stringify(records)); } catch (err) {}
+  }
+
+  function logEvent(type, detail, score) {
+    if (!student) return;
+    records.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      name: student,
+      time: new Date().toISOString(),
+      type: type,
+      detail: detail,
+      score: score === undefined ? null : score
+    });
+    saveRecords();
+  }
+
+  function hhmmss(iso) {
+    var d = new Date(iso);
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0");
+  }
+
+  function showWho() {
+    var w = document.getElementById("who-btn");
+    if (w) { w.textContent = "Talaba: " + student + " · almashtirish"; w.style.display = student ? "" : "none"; }
+    var lg = document.getElementById("login");
+    if (lg) lg.classList.toggle("hide", !!student);
+  }
+
+  function setStudent(name) {
+    student = name;
+    try { localStorage.setItem("zt_student", name); } catch (err) {}
+    logEvent("kirish", "Tizimga kirdi");
+    showWho();
+  }
+
+  function submitLogin() {
+    var inp = document.getElementById("login-name");
+    var name = inp ? inp.value.replace(/\s+/g, " ").trim() : "";
+    if (name.length < 2) { toast("Iltimos, ismingizni kiriting"); return; }
+    setStudent(name);
+    if (inp) inp.value = "";
+    toast(name + " tizimga kirdi");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target && e.target.id === "login-name") submitLogin();
+  });
+
+  function exportRecords() {
+    var blob = new Blob([JSON.stringify(records, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "zt_natijalar_" + (student || "talaba").replace(/\s+/g, "_") + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.id !== "mon-import") return;
+    var files = e.target.files || [];
+    var pending = files.length, added = 0;
+    if (!pending) return;
+    Array.prototype.forEach.call(files, function (file) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var arr = JSON.parse(reader.result);
+          if (!Array.isArray(arr)) arr = arr.records || [];
+          var have = {};
+          records.forEach(function (r) { have[r.id] = true; });
+          arr.forEach(function (r) {
+            if (r && r.id && !have[r.id]) { records.push(r); have[r.id] = true; added++; }
+          });
+        } catch (err) { toast("Fayl o'qilmadi: " + file.name); }
+        if (--pending === 0) {
+          saveRecords();
+          e.target.value = "";
+          if (currentRoute === "monitoring") renderMonitoring();
+          toast(added + " ta yozuv qo'shildi");
+        }
+      };
+      reader.readAsText(file);
+    });
+  });
+
+  function renderMonitoring() {
+    var by = {};
+    records.forEach(function (r) {
+      var b = by[r.name] || (by[r.name] = { name: r.name, events: 0, answers: 0, score: null, decisions: 0, denies: 0, last: "" });
+      b.events++;
+      if (r.type === "test") b.answers++;
+      if (r.type === "test_yakun") b.score = r.score;
+      if (r.type === "qaror") { b.decisions++; if (String(r.detail).indexOf(LABEL.DENY) >= 0) b.denies++; }
+      if (!b.last || r.time > b.last) b.last = r.time;
+    });
+    var people = Object.keys(by).map(function (k) { return by[k]; })
+      .sort(function (a, b) { return a.last < b.last ? 1 : -1; });
+
+    var rows = people.map(function (p) {
+      var score = p.score === null ? "—" : p.score + " / " + QUIZ.length;
+      return '<tr><td><strong>' + esc(p.name) + '</strong></td><td class="mono">' + p.events + '</td>' +
+        '<td class="mono">' + p.answers + '</td><td class="mono">' + score + '</td>' +
+        '<td class="mono">' + p.decisions + '</td><td class="mono">' + p.denies + '</td>' +
+        '<td class="mono">' + hhmmss(p.last) + '</td></tr>';
+    }).join("");
+
+    var log = records.slice(-100).reverse().map(function (r) {
+      var sc = "";
+      if (r.type === "test_yakun") sc = r.score + " / " + QUIZ.length;
+      else if (r.type === "qaror") sc = "xavf " + r.score;
+      return '<tr><td class="mono">' + hhmmss(r.time) + '</td><td>' + esc(r.name) + '</td>' +
+        '<td>' + esc(TYPE_UZ[r.type] || r.type) + '</td><td>' + esc(r.detail) + '</td>' +
+        '<td class="mono">' + esc(sc) + '</td></tr>';
+    }).join("");
+
+    document.getElementById("app").innerHTML =
+      '<section class="view">' +
+      '<h1>Monitoring</h1>' +
+      '<p class="lede">Har bir talabaning testi, bo\'limga kirishi va simulyatordagi qarorlari shu yerda yoziladi. Talaba natijalarini yuklab olib o\'qituvchiga yuboradi, o\'qituvchi barcha fayllarni shu yerga yuklaydi.</p>' +
+      '<div class="mon-actions">' +
+        '<button class="btn" type="button" id="mon-export">Natijalarni yuklab olish</button>' +
+        '<label class="btn ghost" for="mon-import">Talabalar fayllarini yuklash</label>' +
+        '<input type="file" id="mon-import" accept=".json,application/json" multiple style="display:none">' +
+        '<button class="btn ghost" type="button" id="mon-clear">Tozalash</button>' +
+      '</div>' +
+      '<div class="panel" style="margin-bottom:16px"><h2>Talabalar jadvali <span class="sim-tag">JAMI ' + people.length + ' TA</span></h2>' +
+        (people.length
+          ? '<div class="table-wrap"><table><thead><tr><th>Talaba</th><th>Hodisalar</th><th>Javoblar</th><th>Test bali</th><th>Qarorlar</th><th>Rad etilgan</th><th>Oxirgi faollik</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+          : '<div class="empty">Hali yozuv yo\'q.</div>') +
+      '</div>' +
+      '<div class="panel"><h2>Hodisalar jurnali <span class="sim-tag">OXIRGI 100 TA</span></h2>' +
+        (records.length
+          ? '<div class="table-wrap"><table><thead><tr><th>Vaqt</th><th>Talaba</th><th>Turi</th><th>Tafsilot</th><th>Natija</th></tr></thead><tbody>' + log + '</tbody></table></div>'
+          : '<div class="empty">Yozuv yo\'q.</div>') +
+      '</div>' +
+      '</section>';
+  }
+
+  /* ---------- Marshrutizatsiya ---------- */
+  function go(h) {
+    try { history.replaceState(null, "", "#" + h); } catch (e) {}
+    route(h);
+  }
+
+  function route(forced) {
+    var h = forced || (location.hash || "#overview").replace("#", "");
+    if (["overview", "policy", "scenarios", "qa", "monitoring"].indexOf(h) < 0) h = "overview";
+    currentRoute = h;
+    setActiveTab(h);
+    logEvent("sahifa", h);
+    if (h === "overview") renderOverview();
+    else if (h === "policy") renderPolicyShell();
+    else if (h === "scenarios") renderScenarios();
+    else if (h === "monitoring") renderMonitoring();
+    else renderQA();
+  }
+
+  /* ---------- Hodisalar ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (!t.closest) return;
+
+    var nav = t.closest("[data-route]");
+    if (nav) {
+      e.preventDefault();
+      go(nav.getAttribute("data-route"));
+      return;
+    }
+
+    var kpi = t.closest("[data-kpi]");
+    if (kpi) {
+      ovFilter = kpi.getAttribute("data-kpi");
+      renderOverview();
+      var list = document.querySelector("[data-filter]");
+      if (list) list.scrollIntoView({ block: "center" });
+      return;
+    }
+
+    var chip = t.closest("[data-filter]");
+    if (chip) { ovFilter = chip.getAttribute("data-filter"); renderOverview(); return; }
+
+    var cat = t.closest("[data-cat]");
+    if (cat) { faqCat = cat.getAttribute("data-cat"); renderQA(); return; }
+
+    var load = t.closest("[data-load]");
+    if (load) {
+      var key = load.getAttribute("data-load");
+      var s = SCENARIOS.filter(function (x) { return x.key === key; })[0];
+      state = Object.assign({}, s.s);
+      activeScenario = key;
+      go("policy");
+      toast("Senariy " + key + " simulyatorga yuklandi");
+      return;
+    }
+
+    if (t.id === "login-btn") { submitLogin(); return; }
+
+    if (t.id === "who-btn") {
+      logEvent("chiqish", "Tizimdan chiqdi");
+      student = "";
+      try { localStorage.removeItem("zt_student"); } catch (err) {}
+      showWho();
+      var inp2 = document.getElementById("login-name");
+      if (inp2) inp2.focus();
+      return;
+    }
+
+    if (t.id === "mon-export") { exportRecords(); return; }
+
+    if (t.id === "mon-clear") {
+      if (confirm("Barcha yozuvlar o'chirilsinmi?")) {
+        records = [];
+        saveRecords();
+        renderMonitoring();
+      }
+      return;
+    }
+
+    if (t.id === "log-btn") {
+      var ev = evaluate(state);
+      var now = new Date();
+      var stamp = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0") + ":" + String(now.getSeconds()).padStart(2, "0");
+      audit.push({ time: stamp, summary: ROLE_UZ[state.role] + " · " + ACT_UZ[state.action] + " · maxfiylik " + SENS_UZ[state.sens] + " · " + DEV_UZ[state.device], outcome: ev.outcome, risk: ev.risk });
+      logEvent("qaror", ROLE_UZ[state.role] + " · " + ACT_UZ[state.action] + " · " + SENS_UZ[state.sens] + " maxfiylik → " + LABEL[ev.outcome], ev.risk);
+      renderAudit();
+      toast("Qaror yozildi (simulyatsiya)");
+      return;
+    }
+
+    var opt = t.closest("[data-opt]");
+    if (opt && !opt.disabled) {
+      var choice = Number(opt.getAttribute("data-opt"));
+      var Q = QUIZ[quizIndex];
+      logEvent("test", "Savol " + (quizIndex + 1) + ": " + (choice === Q.ans ? "to'g'ri" : "noto'g'ri"));
+      var buttons = document.querySelectorAll("[data-opt]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
+        if (i === Q.ans) buttons[i].classList.add("right");
+      }
+      if (choice === Q.ans) {
+        quizScore++;
+        document.getElementById("quiz-fb").textContent = "To'g'ri. " + Q.why;
+      } else {
+        buttons[choice].classList.add("wrong");
+        document.getElementById("quiz-fb").textContent = "Noto'g'ri. " + Q.why;
+      }
+      document.getElementById("quiz-next").disabled = false;
+      document.getElementById("quiz-next").textContent = quizIndex === QUIZ.length - 1 ? "Natijani ko'rish" : "Keyingi savol";
+      return;
+    }
+
+    if (t.id === "quiz-next") {
+      if (quizIndex === QUIZ.length - 1) { quizDone = true; logEvent("test_yakun", "Test yakunlandi", quizScore); }
+      else quizIndex++;
+      renderQA();
+      return;
+    }
+
+    if (t.id === "quiz-restart") {
+      quizIndex = 0; quizScore = 0; quizDone = false;
+      renderQA();
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (el.id === "faq-search") {
+      faqQuery = el.value;
+      renderQA();
+      var s = document.getElementById("faq-search");
+      if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+      return;
+    }
+
+    var f = el.getAttribute && el.getAttribute("data-field");
+    if (!f) return;
+    var v = el.tagName === "INPUT" && (el.type === "number" || el.type === "range")
+      ? Math.max(0, Math.min(f === "conn" ? 100 : 48, Number(el.value) || 0))
+      : el.value;
+    state[f] = v;
+    activeScenario = null;
+    var cv = document.getElementById("conn-val");
+    if (cv) cv.textContent = state.conn;
+    updatePolicyResults();
+  });
+
+  window.addEventListener("hashchange", function () { route(); });
+  showWho();
+  route();
+})();
+</script>
+</body>
+</html>
